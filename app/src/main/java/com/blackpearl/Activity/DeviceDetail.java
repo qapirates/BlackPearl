@@ -2,29 +2,25 @@ package com.blackpearl.Activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.blackpearl.Controllers.ApiConstants;
 import com.blackpearl.Controllers.AppVariables;
-import com.blackpearl.Controllers.DeviceConfiguration;
 import com.blackpearl.Controllers.RetrofitCall;
-import com.blackpearl.Controllers.Reusables;
+import com.blackpearl.Controllers.RetrofitInstance;
+import com.blackpearl.Controllers.RetrofitInterface;
 import com.blackpearl.Models.ChartData;
 import com.blackpearl.Models.ChartParameterRequest;
 import com.blackpearl.Models.Device;
@@ -33,24 +29,24 @@ import com.blackpearl.Models.ParameterChart;
 import com.blackpearl.Models.User;
 import com.blackpearl.R;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.DefaultAxisValueFormatter;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.utils.Utils;
+import com.google.gson.Gson;
 
-import org.angmarch.views.NiceSpinner;
-import org.angmarch.views.OnSpinnerItemSelectedListener;
-
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DeviceDetail extends AppCompatActivity {
 
@@ -65,48 +61,88 @@ public class DeviceDetail extends AppCompatActivity {
         getSupportActionBar().setLogo(R.mipmap.ic_launcher);
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
-        /*User user = RetrofitCall.getUserDetailsFromAPI();
+        User user = RetrofitCall.getUserDetailsFromAPI();
         TextView activityTitle = (TextView) findViewById(R.id.text_deviceTitile);
         TextView lastUpdatedOn = (TextView) findViewById(R.id.text_lastUpdatedOn);
         Intent intent = getIntent();
         int devicePosition = intent.getIntExtra("devicePosition", 0);
-        Device device = user.getDeviceDetail().get(devicePosition);
+        final Device device = user.getDeviceDetail().get(devicePosition);
 
         activityTitle.setText(device.getDevice_Name() + " at " + device.getArea());
-        lastUpdatedOn.setText(R.string.device_last_updated_on + device.getLastupdatedon());
-        displayCurrentDetails(device);*/
+        lastUpdatedOn.setText(getString(R.string.device_last_updated_on) + " " + device.getLastupdatedon());
+        displayCurrentDetails(device);
+
+        final LinearLayout layout_chart_temperature = findViewById(R.id.layout_chart_temperature);
+        final LinearLayout layout_chart_phLevel = findViewById(R.id.layout_chart_phLevel);
+        final LinearLayout layout_chart_particleLevel = findViewById(R.id.layout_chart_particleLevel);
+        final LinearLayout layout_chart_oxygenLevel = findViewById(R.id.layout_chart_oxygenLevel);
+        final LinearLayout layout_chart_salinity = findViewById(R.id.layout_chart_salinity);
+
+
+        final LineChart mChart_temperature = findViewById(R.id.chart_temperature);
+        final LineChart mChart_phLevel = findViewById(R.id.chart_phLevel);
+        final LineChart mChart_TDS = findViewById(R.id.chart_particleLevel);
+        final LineChart mChart_TDO = findViewById(R.id.chart_oxygenLevel);
+        final LineChart mChart_salinity = findViewById(R.id.chart_salinityLevel);
+
+        mChart_temperature.setNoDataText("Tap to view performance");
+
+        mChart_phLevel.setNoDataText("Tap to view performance");
+        mChart_TDS.setNoDataText("Tap to view performance");
+        mChart_TDO.setNoDataText("Tap to view performance");
+        mChart_salinity.setNoDataText("Tap to view performance");
+/*
+        Paint p = mChart_temperature.getPaint(Chart.PAINT_INFO);
+        p.setTextSize();*/
+
+
+        layout_chart_temperature.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                displayChartForParameter(device, ApiConstants.PARAMETER_ID_TEMPERATURE, mChart_temperature);
+                layout_chart_temperature.invalidate();
+            }
+        });
+
+        layout_chart_phLevel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                displayChartForParameter(device, ApiConstants.PARAMETER_ID_PH, mChart_phLevel);
+                layout_chart_phLevel.invalidate();
+            }
+        });
+        layout_chart_particleLevel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                displayChartForParameter(device, ApiConstants.PARAMETER_ID_TDS, mChart_TDS);
+                layout_chart_particleLevel.invalidate();
+            }
+        });
+        layout_chart_oxygenLevel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                displayChartForParameter(device, ApiConstants.PARAMETER_ID_TDO, mChart_TDO);
+                layout_chart_oxygenLevel.invalidate();
+            }
+        });
+        layout_chart_salinity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                displayChartForParameter(device, ApiConstants.PARAMETER_ID_SALINITY, mChart_salinity);
+                layout_chart_salinity.invalidate();
+            }
+        });
 
 
         AsyncTaskRunner runner = new AsyncTaskRunner();
         String sleepTime = "3";
         runner.execute(sleepTime);
 
-        /*ArrayList<Integer> activeParameteres = RetrofitCall.getActiveParametersForDevice(Integer.parseInt(device.getId()));
-        Log.e("ACTIVE PARAMETERS", activeParameteres.toString());*/
-
-
-        /*LineChart mChart_temperature = findViewById(R.id.chart_temperature);
-        displayChartForParameter(device, ApiConstants.PARAMETER_ID_TEMPERATURE, mChart_temperature);
-
-
-        LineChart mChart_phLevel = findViewById(R.id.chart_phLevel);
-        displayChartForParameter(device, ApiConstants.PARAMETER_ID_PH, mChart_phLevel);
-
-
-        LineChart mChart_TDS = findViewById(R.id.chart_particleLevel);
-        displayChartForParameter(device, ApiConstants.PARAMETER_ID_TDS, mChart_TDS);
-
-
-        LineChart mChart_TDO = findViewById(R.id.chart_oxygenLevel);
-        displayChartForParameter(device, ApiConstants.PARAMETER_ID_TDO, mChart_TDO);
-
-
-        LineChart mChart_salinity = findViewById(R.id.chart_salinityLevel);
-        displayChartForParameter(device, ApiConstants.PARAMETER_ID_SALINITY, mChart_salinity);*/
 
     }
 
-    private void displayChartForParameter(Device device, int parameterID, LineChart mChart) {
+    private void displayChartForParameter(Device device, final int parameterID, final LineChart mChart) {
+
         mChart.setTouchEnabled(true);
         mChart.setPinchZoom(true);
 
@@ -118,9 +154,6 @@ public class DeviceDetail extends AppCompatActivity {
         chartParameterRequest.setParameterID(parameterID);
         chartParameterRequest.setType("Daily");
 
-        ParameterChart parameterChart = RetrofitCall.getChartDataForParameter(chartParameterRequest);
-
-        Log.d("NUMBER OF CHART VALUES", parameterChart.getParameterValues().size() + "");
 
         ArrayList<Entry> values = new ArrayList<>();
 
@@ -150,30 +183,36 @@ public class DeviceDetail extends AppCompatActivity {
         hourMap.put(23, "10 PM");
         hourMap.put(24, "11 PM");
 
+        ArrayList<String> dataArrayList = new ArrayList<>();
 
-        ArrayList<ChartData> dataArrayList = parameterChart.getParameterValues();
-        for (int index = 0; index < dataArrayList.size(); index++) {
-            ChartData chartData = dataArrayList.get(index);
-            values.add(new Entry((index + 1), Float.parseFloat(chartData.getValue())));
-        }
 
         String label = "";
-        Drawable drawable = ContextCompat.getDrawable(this, R.drawable.layout_gradient_grey_white);
+        Drawable drawable = ContextCompat.getDrawable(DeviceDetail.this, R.drawable.layout_gradient_grey_white);
         if (parameterID == ApiConstants.PARAMETER_ID_TEMPERATURE) {
             label = "Temperature";
-            drawable = ContextCompat.getDrawable(this, R.drawable.layout_gradient_grey_white);
+            drawable = ContextCompat.getDrawable(DeviceDetail.this, R.drawable.layout_gradient_grey_white);
+            dataArrayList = ApiConstants.VALUES_TEMPERATURE;
         } else if (parameterID == ApiConstants.PARAMETER_ID_PH) {
             label = "PH Level";
-            drawable = ContextCompat.getDrawable(this, R.drawable.gradient_amber_white_vertical);
+            drawable = ContextCompat.getDrawable(DeviceDetail.this, R.drawable.gradient_amber_white_vertical);
+            dataArrayList = ApiConstants.VALUES_PH_LEVEL;
         } else if (parameterID == ApiConstants.PARAMETER_ID_TDS) {
             label = "Total Dissolved Solids";
-            drawable = ContextCompat.getDrawable(this, R.drawable.gradient_green_white_vertical);
+            drawable = ContextCompat.getDrawable(DeviceDetail.this, R.drawable.gradient_green_white_vertical);
+            dataArrayList = ApiConstants.VALUES_TDS;
         } else if (parameterID == ApiConstants.PARAMETER_ID_TDO) {
             label = "Total Dissolved Oxygen";
-            drawable = ContextCompat.getDrawable(this, R.drawable.gradient_white_blue);
+            drawable = ContextCompat.getDrawable(DeviceDetail.this, R.drawable.gradient_white_blue);
+            dataArrayList = ApiConstants.VALUES_TDO;
         } else if (parameterID == ApiConstants.PARAMETER_ID_SALINITY) {
             label = "Salinity";
-            drawable = ContextCompat.getDrawable(this, R.drawable.gradient_red_white_vertical);
+            drawable = ContextCompat.getDrawable(DeviceDetail.this, R.drawable.gradient_red_white_vertical);
+            dataArrayList = ApiConstants.VALUES_SALINITY;
+        }
+
+        for (int index = 0; index < dataArrayList.size(); index++) {
+            String chartData = dataArrayList.get(index);
+            values.add(new Entry((index + 1), Float.parseFloat(chartData)));
         }
 
 
@@ -221,10 +260,9 @@ public class DeviceDetail extends AppCompatActivity {
             });
 
             mChart.setData(data);
-
-
         }
     }
+
 
     private void displayCurrentDetails(Device device) {
 
@@ -326,7 +364,7 @@ public class DeviceDetail extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             progressDialog = ProgressDialog.show(DeviceDetail.this,
-                    "Fecthing device details",
+                    "Fetching device details",
                     "Please wait.....");
         }
 
@@ -335,36 +373,7 @@ public class DeviceDetail extends AppCompatActivity {
         protected void onProgressUpdate(String... text) {
             //  finalResult.setText(text[0]);
 
-            User user = RetrofitCall.getUserDetailsFromAPI();
-            TextView activityTitle = (TextView) findViewById(R.id.text_deviceTitile);
-            TextView lastUpdatedOn = (TextView) findViewById(R.id.text_lastUpdatedOn);
-            Intent intent = getIntent();
-            int devicePosition = intent.getIntExtra("devicePosition", 0);
-            Device device = user.getDeviceDetail().get(devicePosition);
 
-            activityTitle.setText(device.getDevice_Name() + " at " + device.getArea());
-            lastUpdatedOn.setText(R.string.device_last_updated_on + device.getLastupdatedon());
-            displayCurrentDetails(device);
-
-
-            LineChart mChart_temperature = findViewById(R.id.chart_temperature);
-            displayChartForParameter(device, ApiConstants.PARAMETER_ID_TEMPERATURE, mChart_temperature);
-            Reusables.waitForSeconds(2);
-
-            LineChart mChart_phLevel = findViewById(R.id.chart_phLevel);
-            displayChartForParameter(device, ApiConstants.PARAMETER_ID_PH, mChart_phLevel);
-            Reusables.waitForSeconds(2);
-
-            LineChart mChart_TDS = findViewById(R.id.chart_particleLevel);
-            displayChartForParameter(device, ApiConstants.PARAMETER_ID_TDS, mChart_TDS);
-            Reusables.waitForSeconds(2);
-
-            LineChart mChart_TDO = findViewById(R.id.chart_oxygenLevel);
-            displayChartForParameter(device, ApiConstants.PARAMETER_ID_TDO, mChart_TDO);
-            Reusables.waitForSeconds(2);
-
-            LineChart mChart_salinity = findViewById(R.id.chart_salinityLevel);
-            displayChartForParameter(device, ApiConstants.PARAMETER_ID_SALINITY, mChart_salinity);
         }
     }
 }

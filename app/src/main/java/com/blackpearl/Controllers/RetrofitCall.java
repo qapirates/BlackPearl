@@ -57,7 +57,9 @@ public class RetrofitCall {
 
     public static ParameterChart getChartDataForParameter(ChartParameterRequest chartParameterRequest) {
 
-
+        ParameterChart fetchedChart;
+        fetchedChart = new ParameterChart();
+        AppVariables.chartResponseString = "";
         RetrofitInterface retrofitInterface = RetrofitInstance.getRetrofitInstance().create(RetrofitInterface.class);
         Call<ParameterChart> chartDetails = retrofitInterface.getChartDetails(chartParameterRequest);
 
@@ -67,28 +69,30 @@ public class RetrofitCall {
                 ParameterChart parameterChart = response.body();
                 Context applicationContext = MainActivity.getContextOfApplication();
                 Gson gson = new Gson();
-                AppVariables.chartResponse = gson.toJson(parameterChart);
-                Log.d("CHART_RESPONSE", AppVariables.chartResponse);
+                AppVariables.chartResponseString = gson.toJson(parameterChart);
+                Log.d("CHART_RESPONSE_STRING", AppVariables.chartResponseString);
 
                 SharedPreferences sharedPreferences = applicationContext.getSharedPreferences("chartResponse", MODE_PRIVATE);
                 SharedPreferences.Editor shaEditor = sharedPreferences.edit();
-                shaEditor.putString("chartResponse", AppVariables.chartResponse);
+                shaEditor.putString("chartResponse", AppVariables.chartResponseString);
                 shaEditor.commit();
             }
 
             @Override
             public void onFailure(Call<ParameterChart> call, Throwable t) {
-                AppVariables.parameterChart = new ParameterChart();
+                ParameterChart fetchedChart = new ParameterChart();
             }
         });
+
 
         Context applicationContext = MainActivity.getContextOfApplication();
         SharedPreferences sharedPreferences;
         sharedPreferences = applicationContext.getSharedPreferences("chartResponse", MODE_PRIVATE);
         String chartResponse = sharedPreferences.getString("chartResponse", "");
         Gson gson = new Gson();
-        AppVariables.parameterChart = gson.fromJson(chartResponse, ParameterChart.class);
-        return AppVariables.parameterChart;
+        fetchedChart = gson.fromJson(chartResponse, ParameterChart.class);
+        AppVariables.chartResponseString = "";
+        return fetchedChart;
     }
 
     public static ArrayList<Integer> getActiveParametersForDevice(int deviceId) {

@@ -12,6 +12,7 @@ import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -43,6 +44,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -76,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Setting username in title
         TextView titleUsername = (TextView) findViewById(R.id.textView_username);
-        titleUsername.setText("Hello, " + AppVariables.user.getName() + " !!");
+        titleUsername.setText(getString(R.string.home_title_username) + " " + AppVariables.user.getName() + " !!");
 
         //setting homepage pie graph
         setHomepageGraph(currentUser);
@@ -132,6 +134,23 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent, options.toBundle());
             }
         });
+
+        CardView cardView_main_generalGuidelines = findViewById(R.id.cardView_main_generalGuidelines);
+        cardView_main_generalGuidelines.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Locale locale = new Locale("bn");
+                Locale.setDefault(locale);
+                Configuration config = new Configuration();
+                config.locale = locale;
+                getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+                Intent i = new Intent(MainActivity.this, MainActivity.class);
+                finish();
+                overridePendingTransition(0, 0);
+                startActivity(i);
+                overridePendingTransition(0, 0);
+            }
+        });
     }
 
     private void setHomepageGraph(User currentUser) {
@@ -161,9 +180,9 @@ public class MainActivity extends AppCompatActivity {
             graphTextSafeDevices.setSelected(true);
             colorArray.add(ContextCompat.getColor(getApplicationContext(), R.color.color_green_teal));
             if (deviceCount == overAllStatusList.get("green")) {
-                graphTextSafeDevices.setText("All of your devices are safe !!");
+                graphTextSafeDevices.setText(getString(R.string.home_chart_text_device_safe_all));
             } else {
-                graphTextSafeDevices.setText(overAllStatusList.get("green") + " of your devices are safe !!");
+                graphTextSafeDevices.setText(overAllStatusList.get("green") + " " + getString(R.string.home_chart_text_device_safe));
             }
 
         } else if (overAllStatusList.get("amber") > 0) {
@@ -172,9 +191,9 @@ public class MainActivity extends AppCompatActivity {
             graphTextAmberDevices.setVisibility(View.VISIBLE);
 
             if (deviceCount == overAllStatusList.get("amber")) {
-                graphTextAmberDevices.setText("All of your devices needs your attention !!");
+                graphTextAmberDevices.setText(getString(R.string.home_chart_text_device_amber_all));
             } else {
-                graphTextAmberDevices.setText(overAllStatusList.get("amber") + " of your devices needs your attention!!");
+                graphTextAmberDevices.setText(overAllStatusList.get("amber") + " " + getString(R.string.home_chart_text_device_amber));
             }
 
         } else if (overAllStatusList.get("red") > 0) {
@@ -183,9 +202,9 @@ public class MainActivity extends AppCompatActivity {
             graphTextRedDvices.setVisibility(View.VISIBLE);
 
             if (deviceCount == overAllStatusList.get("red")) {
-                graphTextRedDvices.setText("All of your devices are at risk !!");
+                graphTextRedDvices.setText(getString(R.string.home_chart_text_device_risk_all));
             } else {
-                graphTextRedDvices.setText(overAllStatusList.get("red") + " of your your devices are at risk !!");
+                graphTextRedDvices.setText(overAllStatusList.get("red") + " " + getString(R.string.home_chart_text_device_risk));
             }
         }
 
@@ -230,20 +249,27 @@ public class MainActivity extends AppCompatActivity {
         menuInflater.inflate(R.menu.layout_menu, menu);
 
         return true;
-
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.translate:
-                //code to translate app
+                Locale locale = new Locale("bn");
+                Locale.setDefault(locale);
+                Configuration config = new Configuration();
+                config.locale = locale;
+                getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+                Intent i = new Intent(MainActivity.this, MainActivity.class);
+                finish();
+                overridePendingTransition(0, 0);
+                startActivity(i);
+                overridePendingTransition(0, 0);
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
-
     }
 
     public static Context getContextOfApplication() {

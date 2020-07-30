@@ -8,6 +8,6 @@ public class AppVariables {
     public static User user;
     public static ParameterChart parameterChart;
     public static String userObjectString;
-    public static String chartResponse;
+    public static String chartResponseString;
     public static String activeParameterResponseString;
 }
